@@ -35,7 +35,7 @@ class LoadData(Dataset):
                 print(tag[p_sample][num + 1])
                 imgs.append((p[num], int(tag[p_sample][num + 1])))
         cap_sample = 55
-        while p_sample < 80:
+        while cap_sample < 80:
             cap_sample = cap_sample + 1
             cap = file_name(root_cap + tag[cap_sample][0])
             print(len(cap))
