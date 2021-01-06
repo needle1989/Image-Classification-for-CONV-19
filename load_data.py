@@ -4,12 +4,15 @@ import csv
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 
+# load csv file
 f = open('trainData/slice-level/Slice_level_label.csv')
 tag = list(csv.reader(f))
+# root path for train set
 root_cap = "trainData/slice-level/Cap/"
 root_p = "trainData/slice-level/Covid-19/"
 
 
+# return root path for every image in this folder
 def file_name(file_dir):
     ct_img = []
     for root, dirs, files in os.walk(file_dir):
@@ -42,7 +45,10 @@ class LoadData(Dataset):
             for num in range(len(cap)):
                 print(cap[num])
                 print(tag[cap_sample][num + 1])
-                imgs.append((cap[num], int(tag[cap_sample][num + 1])))
+                cap_tag = int(tag[cap_sample][num + 1])
+                if cap_tag == 1:
+                    cap_tag = cap_tag + 1
+                imgs.append((cap[num], cap_tag))
         self.imgs = imgs
         self.transform = transform
         self.target_transform = target_transform
