@@ -32,19 +32,19 @@ class LoadData(Dataset):
         while p_sample < 55:
             p_sample = p_sample + 1
             p = file_name(root_p + tag[p_sample][0])
-            print(len(p))
+            # print(len(p))
             for num in range(len(p)):
-                print(p[num])
-                print(tag[p_sample][num + 1])
+                # print(p[num])
+                # print(tag[p_sample][num + 1])
                 imgs.append((p[num], int(tag[p_sample][num + 1])))
         cap_sample = 55
         while cap_sample < 80:
             cap_sample = cap_sample + 1
             cap = file_name(root_cap + tag[cap_sample][0])
-            print(len(cap))
+            # print(len(cap))
             for num in range(len(cap)):
-                print(cap[num])
-                print(tag[cap_sample][num + 1])
+                # print(cap[num])
+                # print(tag[cap_sample][num + 1])
                 cap_tag = int(tag[cap_sample][num + 1])
                 if cap_tag == 1:
                     cap_tag = cap_tag + 1
@@ -63,17 +63,3 @@ class LoadData(Dataset):
 
     def __len__(self):
         return len(self.imgs)
-
-
-ct = file_name(root_cap + tag[56][0])
-print(ct[0])
-print(tag[56][0])
-print(tag[56][1])
-count = 55
-while count < 80:
-    count = count + 1
-    ct = file_name(root_cap + tag[count][0])
-    print(len(ct))
-    for i in range(len(ct)):
-        print(ct[i])
-        print(tag[count][i + 1])
