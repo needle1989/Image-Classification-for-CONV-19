@@ -59,5 +59,7 @@ for i in range(len(p)):
 print(np.shape(allImg))
 print(allImg[1, :, :])
 
+imgset = []
+imgset.append(allImg, 1)
 # FA_org = SITK.load('./testImg.nii.gz')
 # FA_data = FA_org.get_data()
