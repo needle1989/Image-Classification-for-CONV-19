@@ -27,12 +27,14 @@ model.fc = nn.Sequential(
 )
 
 path="covid_classify_model_8.model"
-checkpoint = torch.load(path)
+checkpoint = torch.load(path,map_location='cpu')
 model.load_state_dict(checkpoint)
 model.eval()
 
+wf = open('result.txt','w+')
+
 def predict_image(image_path):
-    print("Prediction in progress")
+    # print("Prediction in progress")
     image = Image.open(image_path)
     if image.mode == 'L':
         image = image.convert('RGB')
@@ -67,12 +69,37 @@ def predict_image(image_path):
 if __name__ == "__main__":
 
     imagepath = "testData/"
-    path=[
+    path = [
         os.path.join(x)
-        for x in os.listdir("testData/T000") if x[0] != '.'
+        for x in os.listdir("testData/") if x[0] != '.'
     ]
 
     # run prediction function annd obtain prediccted class index
-    for j in range(len(path)):
-        index = predict_image(imagepath+path[j])
-        print("Predicted Class ", index,"image name",imagepath+path[j])
+    for j in range(80,119):
+
+        image_name = [
+            os.path.join(x)
+            for x in os.listdir(imagepath+path[j]) if x[0] !='.'
+        ]
+        class_list = []
+        for i in range(len(image_name)):
+            index = predict_image(imagepath+path[j]+"/"+image_name[i])
+            class_list.append(index)
+            # print("Predicted Class ", index , "image name" , imagepath+path[j]+"/"+image_name[i])
+        p_num = class_list.count(1)
+        n_num = class_list.count(0)
+        c_num = class_list.count(2)
+        print(str(n_num) + '  ' + str(p_num) + '  ' + str(c_num))
+        if p_num > 0.4 * len(class_list):
+            res = 'Covid identified'
+            print(path[j]+',Covid-19')
+            wf.write(path[j]+',Covid-19\n')
+        elif c_num > 0.2 * len(class_list):
+            res = 'CAP identified'
+            print(path[j]+',CAP')
+            wf.write(path[j] + ',Cap\n')
+        else:
+            res = 'Non-infected'
+            print(path[j]+',Non-infected')
+            wf.write(path[j] + ',Non-infected\n')
+wf.close()

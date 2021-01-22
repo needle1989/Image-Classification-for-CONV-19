@@ -1,6 +1,7 @@
 import os
 import torch
 import csv
+import Pretreatment
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 
@@ -8,8 +9,8 @@ from torch.utils.data import Dataset, DataLoader
 f = open('trainData/slice-level/Slice_level_label.csv')
 tag = list(csv.reader(f))
 # root path for train set
-root_cap = "trainData/slice-level-v2/slice-level/Cap/"
-root_p = "trainData/slice-level-v2/slice-level/Covid-19/"
+root_cap = "trainData/slice-level/slice-level/Cap/"
+root_p = "trainData/slice-level/slice-level/Covid-19/"
 root_normal = "trainData/subject-level/Non-infected/"
 
 
@@ -39,6 +40,7 @@ class LoadData(Dataset):
             for num in range(len(p)):
                 # print(p[num])
                 # print(tag[p_sample][num + 1])
+                Pretreatment(p[num])
                 imgs.append((p[num], int(tag[p_sample][num + 1])))
         cap_sample = 55
         while cap_sample < 80:
@@ -52,6 +54,7 @@ class LoadData(Dataset):
                 if cap_tag == 1:
                     cap_tag = cap_tag + 1
                 print(cap_tag)
+                Pretreatment(p[num])
                 imgs.append((cap[num], cap_tag))
 
         non_paths = [
