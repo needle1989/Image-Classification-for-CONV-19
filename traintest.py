@@ -10,6 +10,7 @@ from torch.optim import Adam
 from torch.autograd import Variable
 from load_data import LoadData
 import numpy as np
+import time
 
 '''
 class Unit(nn.Module):
@@ -74,11 +75,13 @@ class SimpleNet(nn.Module):
 '''
 
 # Define transformations for the training set, flip the images randomly, crop out and apply mean and std normalization
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 train_transformations = transforms.Compose([
+    transforms.Resize(256),
+    transforms.RandomResizedCrop((224), scale=(0.5, 1.0)),
     transforms.RandomHorizontalFlip(),
-    transforms.RandomCrop(512, padding=4),
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    normalize
 ])
 
 batch_size = 16
@@ -117,13 +120,15 @@ print("over LoadData")
 cuda_avail = torch.cuda.is_available()
 
 # Create model, optimizer and loss function
-model = torchvision.models.resnet50(pretrained=True)
+model = torchvision.models.densenet169(pretrained=True)
+num_ftrs = model.classifier.in_features
+model.classifier = nn.Linear(num_ftrs, 3)
 
 for param in model.parameters():
     param.requires_grad = False
 
-fc_inputs = model.fc.in_features
-model.fc = nn.Sequential(
+fc_inputs = model.features
+model.classifier = nn.Sequential(
     nn.Linear(fc_inputs, 256),
     nn.ReLU(),
     nn.Dropout(0.4),
@@ -180,7 +185,7 @@ def train(num_epochs):
         train_loss = 0.0
         total = 0
         for i, (images, labels) in enumerate(train_loader):
-            # print("train i:{}".format(i))
+            # print("train i:{} print labels:{}".format(i , labels))
             # Move images and labels to gpu if available
             if cuda_avail:
                 images = Variable(images.cuda())
@@ -221,6 +226,7 @@ def train(num_epochs):
             save_models(epoch)
             best_acc = test_acc
 
+        print(time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
         # Print the metrics
         print("Epoch {}, Train Accuracy: {} , TrainLoss: {} , Test Accuracy: {}".format(epoch, train_acc, train_loss, test_acc))
 
