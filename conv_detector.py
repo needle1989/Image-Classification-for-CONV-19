@@ -1,9 +1,11 @@
 from tkinter import *
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
 import csv
 import os
 from tkinter import ttk
 import time
+
+from testanswer import predict_image
 
 gui = Tk()
 
@@ -15,164 +17,59 @@ progress_bar = ttk.Progressbar(orient='horizontal', length=600, mode='determinat
 progress_bar.grid(row=150, columnspan=3, pady=10)
 
 
-def data():
-    global filename
-    filename = askopenfilename(initialdir='C:\\', title="Select file")
-    e1.delete(0, END)
-    e1.insert(0, filename)
-    # e1.config(text=filename)
-    # print(filename)
+def predict():
 
-    import pandas as pd
-    global file1
+    path = [
+        os.path.join(x)
+        for x in os.listdir(pathv.get()) if x[0] != '.'
+    ]
 
-    file1 = pd.read_csv(filename)
-
-    global col
-    col = list(file1.head(0))
-    # print(col)
-
-    for i in range(len(col)):
-        box1.insert(i + 1, col[i])
-
-
-def X_values():
-    values = [box1.get(idx) for idx in box1.curselection()]
-    for i in range(len(list(values))):
-        box2.insert(i + 1, values[i])
-        box1.selection_clear(i + 1, END)
-    X_values.x1 = []
-    for j in range(len(values)): X_values.x1.append(j)
-
-    global x_size
-    x_size = len(X_values.x1)
-    print(x_size)
-
-    print(X_values.x1)
-
-
-def y_values():
-    values = [box1.get(idx) for idx in box1.curselection()]
-    for i in range(len(list(values))):
-        box3.insert(i + 1, values[i])
-    y_values.y1 = []
-    for j in range(len(values)): y_values.y1.append(j)
-
-    print(y_values.y1)
-
-
-def clear():
-    pass
-
-
-def sol():
-    progress()
-
-    from sklearn.model_selection import cross_val_score, train_test_split, KFold
-    from sklearn.neighbors import KNeighborsClassifier
-    from sklearn.svm import SVC
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.tree import DecisionTreeClassifier
-    from sklearn.naive_bayes import GaussianNB
-    from matplotlib import pyplot as plt
-
-    X = file1.iloc[:, X_values.x1].values
-    y = file1.iloc[:, y_values.y1].values
-
-    y = y.reshape((-1,))
-
-    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-
-    le = LabelEncoder()
-    hotlist = []
-
-    for i in range(X.shape[1]):
-        if isinstance(X[1, i], str):
-            X[:, i] = le.fit_transform(X[:, i])
-            hotlist.append(i)
-            # print('hello')
-    # print(X)
-    # print(hotlist)
-
-    onehot = OneHotEncoder(categorical_features=hotlist)
-    X = onehot.fit_transform(X).toarray()
-
-    from sklearn.preprocessing import StandardScaler
-
-    sc = StandardScaler()
-
-    X = sc.fit_transform(X)
-
-    kfold = KFold(10, random_state=7)
-    models = []
-    models.append(("KNN", KNeighborsClassifier()))
-    models.append(("NB", GaussianNB()))
-    # models.append(("LG",LogisticRegression()))
-    models.append(("Tree", DecisionTreeClassifier()))
-    # models.append(("SVM",SVC()))
-    results = []
-    names = []
-    scoring = 'accuracy'
-    for name, model in models:
-        kfold = KFold(n_splits=5, random_state=5)
-        v = cross_val_score(model, X, y, cv=kfold, scoring=scoring)
-        results.append(v)
-        names.append(name)
-        print(name)
-        print(v)
-    fig = plt.figure()
-    fig.suptitle('Algorithm Comparison')
-    ax = fig.add_subplot(111)
-    plt.boxplot(results)
-    ax.set_xticklabels(names)
-    plt.show()
-
-    # stop_progressbar()
-
-
-def progress():
-    progress_bar['maximum'] = 100
-
-    for i in range(101):
-        time.sleep(0.01)
-        progress_bar['value'] = i
+    # run prediction function annd obtain prediccted class index
+    progress_bar['maximum'] = len(path)
+    class_list = []
+    for j in range(len(path)):
+        progress_bar['value'] = j
         progress_bar.update()
-
+        index = predict_image(pathv.get() + '/' + path[j])
+        class_list.append(index)
+        print("Predicted Class ", index, "image name", path[j])
     progress_bar['value'] = 0
+    p_num = class_list.count(1)
+    n_num = class_list.count(0)
+    c_num = class_list.count(2)
+    print(str(n_num) + '  ' + str(p_num) + '  ' + str(c_num))
+    if p_num > 0.4 * len(class_list):
+        pre = 'Covid identified'
+        print('Covid identified')
+    elif c_num > 0.2 * len(class_list):
+        pre = 'CAP identified'
+        print('CAP identified')
+    else:
+        pre = 'Non-infected'
+        print('Non-infected')
+    res.set(pre)
 
 
-'''
-def start_progressbar():
-    a = progress()
-    a.progress_bar.start()
-def stop_progressbar():
-    a = progress()
-    a.progress_bar.stop()
-def twofunc():
-    progress()
-    sol()
+def selectPath():
+    path_ = askdirectory()
+    pathv.set(path_)
 
-'''
 
-l1 = Label(gui, text='Select Data File')
-l1.grid(row=0, column=0)
-e1 = Entry(gui, text='')
-e1.grid(row=0, column=1)
+pathv = StringVar()
 
-Button(gui, text='open', command=data).grid(row=0, column=2)
-
-box1 = Listbox(gui, selectmode='multiple')
-box1.grid(row=10, column=0)
-Button(gui, text='Clear All', command=clear).grid(row=12, column=0)
+Label(gui, text="Result:").grid(row=0, column=0)
+e1 = Entry(gui, textvariable=pathv).grid(row=0, column=1)
+Button(gui, text="Select", command=selectPath).grid(row=0, column=2)
 
 box2 = Listbox(gui)
 box2.grid(row=10, column=1)
-Button(gui, text='Select X', command=X_values).grid(row=12, column=1)
+for item in ["Class:", "Covid-19", "CAP", "Non-infected"]:
+    box2.insert("end", item)
+res = StringVar()
+res.set('No input')
+result = Label(gui, textvariable=res)
+result.grid(row=2, column=0)
 
-box3 = Listbox(gui)
-box3.grid(row=10, column=2)
-Button(gui, text='Select y', command=y_values).grid(row=12, column=2)
-
-Button(gui, text='Solution', command=sol).grid(row=20, column=1)
+Button(gui, text='Run Prediction', command=predict).grid(row=12, column=1)
 
 gui.mainloop()
